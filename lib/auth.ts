@@ -58,8 +58,8 @@ class AuthManager {
 
     try {
       const response = await v2boardAPI.login({ email, password })
-
-      if (response.status === "success") {
+    
+      if (response?.data?.token && response?.data?.auth_data) {
         const { token, auth_data } = response.data
 
         localStorage.setItem("v2board_token", token)
@@ -78,16 +78,17 @@ class AuthManager {
         this.setState({ isLoading: false })
         return { success: false, message: response.message || "登录失败" }
       }
-
     } catch (error: any) {
       this.setState({ isLoading: false })
 
-      // ✅ 如果服务器返回了错误信息（如邮箱或密码错误）
-      if (error.response?.data?.message) {
-        return { success: false, message: error.response.data.message }
+      if (error.data?.message) {
+        return { success: false, message: error.data.message }
       }
 
-      // 否则 fallback 为默认提示
+      if (error.message) {
+        return { success: false, message: error.message }
+      }
+
       return { success: false, message: "网络错误，请稍后重试" }
     }
   }
