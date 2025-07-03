@@ -83,8 +83,8 @@ class AuthManager {
       this.setState({ isLoading: false })
 
       // ✅ 如果服务器返回了错误信息（如邮箱或密码错误）
-      if (error.response?.data?.message) {
-        return { success: false, message: error.response.data.message }
+      if (error.data?.message) {
+        return { success: false, message: error.data.message }
       }
 
       // 否则 fallback 为默认提示
@@ -110,8 +110,11 @@ class AuthManager {
         this.setState({ isLoading: false })
         return { success: false, message: response.message || "注册失败" }
       }
-    } catch (error) {
+    } catch (error: any) {
       this.setState({ isLoading: false })
+      if (error.data?.message) {
+        return { success: false, message: error.data.message }
+      }
       return { success: false, message: "网络错误，请稍后重试" }
     }
   }
@@ -127,7 +130,10 @@ class AuthManager {
       } else {
         return { success: false, message: response.message || "发送失败" }
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.data?.message) {
+        return { success: false, message: error.data.message }
+      }
       return { success: false, message: "网络错误，请稍后重试" }
     }
   }
@@ -181,7 +187,10 @@ class AuthManager {
       } else {
         return { success: false, message: response.message || "重置失败" }
       }
-    } catch (e) {
+    } catch (e: any) {
+      if (e.data?.message) {
+        return { success: false, message: e.data.message }
+      }
       return { success: false, message: "网络错误，请稍后重试" }
     }
   }

@@ -45,7 +45,11 @@ class V2BoardAPI {
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<V2BoardResponse<T>> {
-    const url = `${this.baseUrl}/api/v1${endpoint}`
+    let base = this.baseUrl.replace(/\/+$/, "")
+    if (!base.endsWith("/api/v1")) {
+      base += "/api/v1"
+    }
+    const url = `${base}${endpoint}`
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
