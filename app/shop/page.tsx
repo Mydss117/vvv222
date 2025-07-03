@@ -2,11 +2,13 @@
 
 import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
+import { useConfig } from "@/hooks/use-config"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Check } from "lucide-react"
 
 export default function ShopPage() {
+  const config = useConfig()
   const plans = [
     {
       name: "基础版",
@@ -90,6 +92,30 @@ export default function ShopPage() {
           </div>
         </div>
       </div>
+      {/* Footer */}
+      <footer className="py-12 px-4 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700">
+        <div className="container mx-auto text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <img
+              src={config.logoUrl}
+              alt="Logo"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <span className="text-lg font-semibold text-gray-900 dark:text-white">
+              {config.siteName}
+            </span>
+          </div>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              All systems operational
+            </span>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            © 2025 {config.siteName}. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

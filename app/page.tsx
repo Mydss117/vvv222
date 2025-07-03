@@ -35,6 +35,7 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
+              <Link href="/faq">
               <Button
                 variant="outline"
                 size="lg"
@@ -43,6 +44,7 @@ export default function HomePage() {
                 <Play className="mr-2 h-5 w-5" />
                 了解更多
               </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -55,9 +57,6 @@ export default function HomePage() {
 
           {/* 渐变遮罩 */}
           <div className="relative overflow-hidden">
-            <div className="absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-black via-black/70 to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-black via-black/70 to-transparent z-10 pointer-events-none" />
-
             {/* 滚动容器 */}
             <div className="whitespace-nowrap animate-scroll flex gap-12">
               {[
@@ -104,6 +103,7 @@ export default function HomePage() {
       <section className="py-20 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-16">
+            <p className="text-teal-600 font-semibold mb-12">特色功能</p>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">我们将尽最大努力为您提供最好的服务</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -150,7 +150,7 @@ export default function HomePage() {
       <section className="py-20 px-4 bg-white/50 dark:bg-zinc-800/50">
         <div className="container mx-auto">
           <div className="text-center mb-16">
-            <p className="text-teal-600 font-semibold mb-4">使用案例</p>
+            <p className="text-teal-600 font-semibold mb-12">使用案例</p>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">为您的需求提供更多的帮助</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">

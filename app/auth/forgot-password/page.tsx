@@ -8,10 +8,21 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, Loader2, Send } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useConfig } from "@/hooks/use-config"
 import { ModeToggle } from "@/components/mode-toggle"
+
+const EMAIL_SUFFIXES = [
+  "qq.com",
+  "gmail.com",
+  "163.com",
+  "126.com",
+  "outlook.com",
+  "139.com",
+  "foxmail.com",
+  "hotmail.com"
+]
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -19,7 +30,8 @@ export default function ForgotPasswordPage() {
   const { sendEmailCode, resetPassword, isLoading } = useAuth()
 
   const [formData, setFormData] = useState({
-    email: "",
+    emailPrefix: "",
+    emailSuffix: EMAIL_SUFFIXES[0],
     code: "",
     password: "",
     confirmPassword: "",
@@ -32,14 +44,18 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
+  const email = formData.emailPrefix && formData.emailSuffix
+    ? `${formData.emailPrefix}@${formData.emailSuffix}`
+    : ""
+
   const handleSendCode = async () => {
-    if (!formData.email) {
+    if (!formData.emailPrefix) {
       setError("请先输入邮箱")
       return
     }
     setIsCodeLoading(true)
     setError("")
-    const result = await sendEmailCode(formData.email, "reset_password")
+    const result = await sendEmailCode(email, "reset_password")
     if (result.success) {
       setIsCodeSent(true)
       setCountdown(60)
@@ -63,7 +79,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setError("")
     setSuccess("")
-    if (!formData.email || !formData.code || !formData.password || !formData.confirmPassword) {
+    if (!email || !formData.code || !formData.password || !formData.confirmPassword) {
       setError("请填写完整信息")
       return
     }
@@ -76,7 +92,7 @@ export default function ForgotPasswordPage() {
       return
     }
     const result = await resetPassword({
-      email: formData.email,
+      email,
       password: formData.password,
       password_confirmation: formData.confirmPassword,
       email_code: formData.code,
@@ -93,12 +109,10 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="relative w-full h-screen">
-      {/* 背景图 */}
       <div
         className="fixed inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${config.backgroundUrl})` }}
       />
-      {/* 顶部 LOGO+标题+主题切换 */}
       <div className="fixed top-0 left-0 right-0 z-20 flex justify-between items-center px-4 pt-4 pointer-events-none select-none">
         <Link
           href="/"
@@ -118,7 +132,6 @@ export default function ForgotPasswordPage() {
           <ModeToggle />
         </div>
       </div>
-      {/* 内容卡片 */}
       <div className="relative z-10 flex items-center justify-center w-full h-full px-4">
         <Card className="w-full max-w-md shadow-xl border-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md">
           <CardHeader className="text-center space-y-2 pt-8 pb-4">
@@ -133,60 +146,68 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-5">
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="border-red-200 dark:border-red-600 text-red-800 dark:text-red-300">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
               {success && (
-                <Alert>
+                <Alert className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-600 text-green-800 dark:text-green-300">
+                  <Send className="h-4 w-4" />
                   <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}
-              {/* 邮箱 */}
               <div className="space-y-1">
                 <Label htmlFor="email">邮箱</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="请输入您的邮箱"
-                    className="pl-10 h-11"
-                    value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="emailPrefix"
+                      type="text"
+                      placeholder="请输入邮箱"
+                      className="pl-10 h-11"
+                      value={formData.emailPrefix}
+                      onChange={e => setFormData({ ...formData, emailPrefix: e.target.value })}
+                      disabled={isLoading || isCodeLoading}
+                    />
+                  </div>
+                  <select
+                    className="rounded-md border border-gray-300 h-11 px-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                    value={formData.emailSuffix}
+                    onChange={e => setFormData({ ...formData, emailSuffix: e.target.value })}
                     disabled={isLoading || isCodeLoading}
-                  />
+                  >
+                    {EMAIL_SUFFIXES.map((suffix) => (
+                      <option value={suffix} key={suffix}>@{suffix}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-              {/* 验证码行 */}
               <div className="space-y-1">
                 <Label htmlFor="code">验证码</Label>
                 <div className="flex gap-2">
                   <Input
                     id="code"
                     type="text"
-                    placeholder="点击发送后查看邮箱"
-                    className="h-11"
+                    placeholder="请输入6位验证码"
                     maxLength={6}
+                    className="h-11 text-center tracking-widest"
                     value={formData.code}
                     onChange={e => setFormData({ ...formData, code: e.target.value.replace(/\D/g, "") })}
                     disabled={isLoading}
                   />
                   <Button
                     type="button"
-                    className="h-11 px-5"
+                    variant="outline"
+                    className="h-11 px-4 whitespace-nowrap border-gray-300 dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-700 bg-transparent"
                     onClick={handleSendCode}
-                    disabled={!formData.email || countdown > 0 || isCodeLoading || isLoading}
+                    disabled={!formData.emailPrefix || countdown > 0 || isCodeLoading || isLoading}
                   >
-                    {isCodeLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      countdown > 0 ? `${countdown}s` : "发送"
-                    )}
+                    {isCodeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                    {countdown > 0 ? `${countdown}s` : "发送验证码"}
                   </Button>
                 </div>
               </div>
-              {/* 新密码 */}
               <div className="space-y-1">
                 <Label htmlFor="password">密码</Label>
                 <div className="relative">
@@ -212,7 +233,6 @@ export default function ForgotPasswordPage() {
                   </Button>
                 </div>
               </div>
-              {/* 确认新密码 */}
               <div className="space-y-1">
                 <Label htmlFor="confirmPassword">再次输入密码</Label>
                 <div className="relative">

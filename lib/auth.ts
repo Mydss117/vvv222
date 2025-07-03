@@ -7,6 +7,17 @@ export interface AuthState {
   isAuthenticated: boolean
 }
 
+// 通用响应成功判断
+function isApiSuccess(response: any): boolean {
+  return (
+    response?.status === "success" ||
+    response?.status === true ||
+    response?.code === 200 ||
+    response?.data === true ||
+    response?.message === "ok"
+  )
+}
+
 class AuthManager {
   private static instance: AuthManager
   private state: AuthState = {
@@ -55,10 +66,9 @@ class AuthManager {
 
   async login(email: string, password: string): Promise<{ success: boolean; message: string }> {
     this.setState({ isLoading: true })
-
     try {
       const response = await v2boardAPI.login({ email, password })
-    
+
       if (response?.data?.token && response?.data?.auth_data) {
         const { token, auth_data } = response.data
 
@@ -70,18 +80,14 @@ class AuthManager {
           user: auth_data,
           token,
           isAuthenticated: true,
-          isLoading: false,
         })
 
         return { success: true, message: "登录成功" }
       } else {
-        this.setState({ isLoading: false })
         return { success: false, message: response.message || "登录失败" }
       }
     } catch (error: any) {
-      this.setState({ isLoading: false })
-
-      if (error.data?.message) {
+      if (error?.data?.message) {
         return { success: false, message: error.data.message }
       }
 
@@ -90,9 +96,10 @@ class AuthManager {
       }
 
       return { success: false, message: "网络错误，请稍后重试" }
+    } finally {
+      this.setState({ isLoading: false })
     }
   }
-
 
   async register(data: {
     email: string
@@ -102,34 +109,59 @@ class AuthManager {
     invite_code?: string
   }): Promise<{ success: boolean; message: string }> {
     this.setState({ isLoading: true })
+
     try {
       const response = await v2boardAPI.register(data)
-      if (response.status === "success") {
-        this.setState({ isLoading: false })
-        return { success: true, message: "注册成功，请登录" }
+
+      const { token, auth_data } = response.data || {}
+
+      if (token && auth_data) {
+        localStorage.setItem("v2board_token", token)
+        localStorage.setItem("v2board_user", JSON.stringify(auth_data))
+        v2boardAPI.setToken(token)
+
+        this.setState({
+          user: auth_data,
+          token,
+          isAuthenticated: true,
+        })
+
+        return { success: true, message: "注册成功，已自动登录" }
       } else {
-        this.setState({ isLoading: false })
-        return { success: false, message: response.message || "注册失败" }
+        return { success: false, message: extractErrorMessage(response) }
       }
-    } catch (error) {
+    } catch (error: any) {
+      return {
+        success: false,
+        message: extractErrorMessage(error),
+      }
+    } finally {
       this.setState({ isLoading: false })
-      return { success: false, message: "网络错误，请稍后重试" }
     }
   }
+
 
   async sendEmailCode(
     email: string,
     type: "register" | "reset_password" = "register",
   ): Promise<{ success: boolean; message: string }> {
+    this.setState({ isLoading: true })
+
     try {
       const response = await v2boardAPI.sendEmailCode({ email, type })
-      if (response.status === "success") {
-        return { success: true, message: "验证码已发送" }
+
+      if (isApiSuccess(response)) {
+        return { success: true, message: response.message || "验证码已发送" }
       } else {
         return { success: false, message: response.message || "发送失败" }
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.data?.message) {
+        return { success: false, message: error.data.message }
+      }
       return { success: false, message: "网络错误，请稍后重试" }
+    } finally {
+      this.setState({ isLoading: false })
     }
   }
 
@@ -159,31 +191,38 @@ class AuthManager {
     if (!this.state.isAuthenticated) return
     try {
       const response = await v2boardAPI.getUserInfo()
-      if (response.status === "success") {
+      if (isApiSuccess(response)) {
         this.setState({ user: response.data })
         localStorage.setItem("v2board_user", JSON.stringify(response.data))
       }
     } catch {}
   }
 
-  // 重点！重置密码，类型直接声明好
   async resetPassword(
     data: {
-      email: string;
-      password: string;
-      password_confirmation: string;
-      email_code: string;
+      email: string
+      password: string
+      password_confirmation: string
+      email_code: string
     }
   ): Promise<{ success: boolean; message: string }> {
+    this.setState({ isLoading: true })
+
     try {
       const response = await v2boardAPI.resetPassword(data)
-      if (response.status === "success") {
+
+      if (isApiSuccess(response)) {
         return { success: true, message: "密码重置成功" }
       } else {
         return { success: false, message: response.message || "重置失败" }
       }
-    } catch (e) {
+    } catch (e: any) {
+      if (e?.data?.message) {
+        return { success: false, message: e.data.message }
+      }
       return { success: false, message: "网络错误，请稍后重试" }
+    } finally {
+      this.setState({ isLoading: false })
     }
   }
 }
